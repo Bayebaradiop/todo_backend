@@ -35,14 +35,9 @@ public class TodoController {
 
   @PutMapping("/{id}")
   public ResponseEntity<TodoItem> update(@PathVariable Long id, @RequestBody TodoItem todoItem) {
-    TodoItem existing = todoService.findById(id);
-    if (existing == null) {
-      return ResponseEntity.notFound().build();
-    }
-    existing.setTitle(todoItem.getTitle());
-    existing.setDescription(todoItem.getDescription());
-    existing.setCompleted(todoItem.isCompleted());
-    return ResponseEntity.ok(todoService.save(existing));
+    return todoService.update(id, todoItem)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("/{id}")
