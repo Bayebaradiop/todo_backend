@@ -48,7 +48,7 @@ pipeline {
             }
         }
 
-        stage('Test Azure connection') {
+        stage('Deploy to Azure') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -65,6 +65,8 @@ pipeline {
                             -e AZURE_CLIENT_SECRET \
                             -e AZURE_TENANT_ID \
                             -e AZURE_SUBSCRIPTION_ID \
+                            -e DOCKER_IMAGE \
+                            -e BUILD_NUMBER \
                             mcr.microsoft.com/azure-cli:azurelinux3.0 \
                             sh -c '
                                 az login \
@@ -75,9 +77,11 @@ pipeline {
                                     --output none
                                 az account set \
                                     --subscription "$AZURE_SUBSCRIPTION_ID"
-                                az account show \
-                                    --query "{name:name, id:id}" \
-                                    --output table
+                                az containerapp update \
+                                    --name todo-backend-api \
+                                    --resource-group rg-todo-backend-dev \
+                                    --image "$DOCKER_IMAGE:$BUILD_NUMBER" \
+                                    --output none
                             '
                     '''
                 }
