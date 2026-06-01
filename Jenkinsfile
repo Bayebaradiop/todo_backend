@@ -47,6 +47,42 @@ pipeline {
                 }
             }
         }
+
+        stage('Test Azure connection') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'azure-service-principal',
+                        usernameVariable: 'AZURE_CLIENT_ID',
+                        passwordVariable: 'AZURE_CLIENT_SECRET'
+                    ),
+                    string(credentialsId: 'azure-tenant-id', variable: 'AZURE_TENANT_ID'),
+                    string(credentialsId: 'azure-subscription-id', variable: 'AZURE_SUBSCRIPTION_ID')
+                ]) {
+                    sh '''
+                        docker run --rm \
+                            -e AZURE_CLIENT_ID \
+                            -e AZURE_CLIENT_SECRET \
+                            -e AZURE_TENANT_ID \
+                            -e AZURE_SUBSCRIPTION_ID \
+                            mcr.microsoft.com/azure-cli:azurelinux3.0 \
+                            sh -c '
+                                az login \
+                                    --service-principal \
+                                    --username "$AZURE_CLIENT_ID" \
+                                    --password "$AZURE_CLIENT_SECRET" \
+                                    --tenant "$AZURE_TENANT_ID" \
+                                    --output none
+                                az account set \
+                                    --subscription "$AZURE_SUBSCRIPTION_ID"
+                                az account show \
+                                    --query "{name:name, id:id}" \
+                                    --output table
+                            '
+                    '''
+                }
+            }
+        }
     }
 
     post {
