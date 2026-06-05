@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        pollSCM('* * * * *')
+    }
+
     environment {
         DOCKER_IMAGE = 'bayebara01012000/todo-backend'
     }
